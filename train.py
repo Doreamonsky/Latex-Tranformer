@@ -1,18 +1,20 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from dataset import get_dataloaders, LatexImageDataset
+from dataset import get_dataloaders
 from model import get_model
 
 def train(model, loader, criterion, optimizer, device):
     model.train()
-    for images, labels in loader:
+    for batch_idx, (images, labels) in enumerate(loader):
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
         outputs = model(images, labels[:, :-1])
         loss = criterion(outputs.reshape(-1, outputs.shape[-1]), labels[:, 1:].reshape(-1))
         loss.backward()
         optimizer.step()
+        if batch_idx % 10 == 0:
+            print(f'Batch {batch_idx}, Loss: {loss.item()}')
 
 def evaluate(model, loader, criterion, device):
     model.eval()

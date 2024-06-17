@@ -2,9 +2,8 @@ import os
 import json
 from PIL import Image
 import torch
-from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
-import torchvision.transforms as transforms
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
 
 class LatexImageDataset(Dataset):
     def __init__(self, json_dir, img_dir, transform=None, max_seq_length=128):
@@ -82,7 +81,7 @@ class LatexImageDataset(Dataset):
 
 def get_dataloaders(json_dir, img_dir, batch_size=64, max_seq_length=128):
     transform = transforms.Compose([
-        transforms.Resize((128, 128)),
+        transforms.Resize((128, 64)),
         transforms.ToTensor(),
     ])
 

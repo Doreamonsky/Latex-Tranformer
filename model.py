@@ -1,13 +1,12 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 
 class PatchEmbedding(nn.Module):
     def __init__(self, img_size, patch_size, in_channels, embed_dim):
         super(PatchEmbedding, self).__init__()
         self.img_size = img_size
         self.patch_size = patch_size
-        self.n_patches = (img_size // patch_size) ** 2
+        self.n_patches = (img_size[0] // patch_size[0]) * (img_size[1] // patch_size[1])
         self.projection = nn.Conv2d(in_channels, embed_dim, kernel_size=patch_size, stride=patch_size)
 
     def forward(self, x):
@@ -21,7 +20,7 @@ class VisionTransformer(nn.Module):
         super(VisionTransformer, self).__init__()
         self.patch_embedding = PatchEmbedding(img_size, patch_size, in_channels, embed_dim)
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        self.pos_embedding = nn.Parameter(torch.zeros(1, (img_size // patch_size) ** 2 + 1, embed_dim))
+        self.pos_embedding = nn.Parameter(torch.zeros(1, self.patch_embedding.n_patches + 1, embed_dim))
         encoder_layers = nn.TransformerEncoderLayer(embed_dim, num_heads, mlp_dim, dropout)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers)
 
@@ -61,8 +60,8 @@ class LatexVisionTransformer(nn.Module):
         return output
 
 def get_model(vocab_size, max_seq_length):
-    img_size = 128
-    patch_size = 16
+    img_size = (128, 64)  # Image size (height, width)
+    patch_size = (16, 16)  # Adjust patch size to fit the image dimensions
     in_channels = 3
     embed_dim = 512
     num_layers = 6

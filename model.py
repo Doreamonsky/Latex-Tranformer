@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class PatchEmbedding(nn.Module):
     def __init__(self, img_size, patch_size, in_channels, embed_dim):
@@ -32,31 +33,22 @@ class VisionTransformer(nn.Module):
         x = x + self.pos_embedding
         x = x.transpose(0, 1)
         x = self.transformer_encoder(x)
-        x = x[0]
+        x = x[1:].transpose(0, 1)  # Exclude cls_token and transpose for LSTM input
         return x
 
 class LatexVisionTransformer(nn.Module):
     def __init__(self, img_size, patch_size, in_channels, embed_dim, num_layers, num_heads, mlp_dim, vocab_size, max_seq_length, dropout=0.1):
         super(LatexVisionTransformer, self).__init__()
         self.encoder = VisionTransformer(img_size, patch_size, in_channels, embed_dim, num_layers, num_heads, mlp_dim, dropout)
-        self.decoder = nn.TransformerDecoder(
-            nn.TransformerDecoderLayer(embed_dim, num_heads, mlp_dim, dropout),
-            num_layers
-        )
-        self.embedding = nn.Embedding(vocab_size, embed_dim)
-        self.fc_out = nn.Linear(embed_dim, vocab_size)
-        self.pos_embedding = nn.Parameter(torch.zeros(1, max_seq_length, embed_dim))
-        self.embed_dim = embed_dim
+        self.lstm = nn.LSTM(embed_dim, 256, bidirectional=True, num_layers=2, dropout=0.2, batch_first=True)
+        self.dense = nn.Linear(512, vocab_size)  # 512 = 256 * 2 (bidirectional LSTM)
+        self.dropout = nn.Dropout(dropout)
 
-    def forward(self, src, tgt):
+    def forward(self, src, tgt=None):
         enc_out = self.encoder(src)
-        tgt_seq_len = tgt.shape[1]
-        tgt_emb = self.embedding(tgt) * (self.embed_dim ** 0.5)
-        tgt_emb = tgt_emb + self.pos_embedding[:, :tgt_seq_len, :]
-        tgt_emb = tgt_emb.transpose(0, 1)
-        enc_out = enc_out.unsqueeze(0).repeat(tgt_seq_len, 1, 1)
-        output = self.decoder(tgt_emb, enc_out)
-        output = self.fc_out(output)
+        lstm_out, _ = self.lstm(enc_out)
+        output = self.dropout(lstm_out)
+        output = self.dense(output)
         return output
 
 def get_model(vocab_size, max_seq_length):

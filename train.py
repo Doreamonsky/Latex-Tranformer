@@ -81,9 +81,11 @@ def main():
         val_loss = evaluate(model, train_loader, criterion, device)
         print(f'Epoch {epoch + 1}/{num_epochs}, Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}')
 
-    # Save the model weights
-    torch.save(model.state_dict(), 'latex_vit.pth')
-    print("Model weights saved to latex_vit.pth")
+        # Save the model weights
+        torch.save(model.state_dict(), f'latex_vit_{epoch}.pth')
+        print("Model weights saved to latex_vit.pth")
+
+
 
 if __name__ == '__main__':
     main()

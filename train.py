@@ -56,8 +56,8 @@ def main():
     # Parameters
     json_dir = 'latex_db/json'
     img_dir = 'latex_db/output'
-    batch_size = 32
-    num_epochs = 10
+    batch_size = 128
+    num_epochs = 120
     max_seq_length = 128
     learning_rate = 0.0001
     # subset_size = 1000  # Use only a subset of data

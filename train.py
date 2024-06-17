@@ -32,7 +32,7 @@ def main():
     json_dir = 'latex_db/json'
     img_dir = 'latex_db/output'
     batch_size = 64
-    num_epochs = 10
+    num_epochs = 300
     max_seq_length = 128
     learning_rate = 0.001
 
